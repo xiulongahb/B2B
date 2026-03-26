@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>经销商登录 · B2B 商城</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0c1222;
+      --panel: rgba(22, 30, 50, 0.85);
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #e8ecf4;
+      --muted: #8b95a8;
+      --accent: #3d8bfd;
+      --accent-dim: #2563c9;
+      --success: #34d399;
+      --danger: #f87171;
+      --radius: 14px;
+      --shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "DM Sans", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: -40%;
+      background:
+        radial-gradient(ellipse 50% 40% at 20% 20%, rgba(61, 139, 253, 0.18), transparent 55%),
+        radial-gradient(ellipse 45% 35% at 85% 75%, rgba(52, 211, 153, 0.1), transparent 50%),
+        radial-gradient(circle at 50% 100%, rgba(37, 99, 201, 0.15), transparent 45%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .card {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 420px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: calc(var(--radius) + 4px);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+      padding: 40px 36px 36px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 8px;
+    }
+
+    .logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent), #6366f1);
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      font-size: 18px;
+      letter-spacing: -0.02em;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.35rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      margin: 6px 0 28px;
+      font-size: 0.9rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--muted);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .field {
+      margin-bottom: 20px;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px 16px;
+      font-size: 1rem;
+      font-family: inherit;
+      color: var(--text);
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input::placeholder {
+      color: rgba(139, 149, 168, 0.7);
+    }
+
+    input:focus {
+      border-color: rgba(61, 139, 253, 0.55);
+      box-shadow: 0 0 0 3px rgba(61, 139, 253, 0.15);
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .row input {
+      flex: 1;
+    }
+
+    button {
+      font-family: inherit;
+      cursor: pointer;
+      border: none;
+      border-radius: var(--radius);
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: transform 0.15s, background 0.2s, opacity 0.2s;
+    }
+
+    button:active:not(:disabled) {
+      transform: scale(0.98);
+    }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .btn-send {
+      flex-shrink: 0;
+      padding: 0 18px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      border: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    .btn-send:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .btn-primary {
+      width: 100%;
+      margin-top: 8px;
+      padding: 15px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dim));
+      color: #fff;
+      box-shadow: 0 8px 24px rgba(61, 139, 253, 0.35);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      filter: brightness(1.06);
+    }
+
+    .msg {
+      min-height: 22px;
+      margin-top: 14px;
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+
+    .msg.error {
+      color: var(--danger);
+    }
+
+    .msg.ok {
+      color: var(--success);
+    }
+
+    .msg.hint {
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .footer {
+      margin-top: 28px;
+      padding-top: 22px;
+      border-top: 1px solid var(--border);
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    code {
+      font-size: 0.85em;
+      background: rgba(0, 0, 0, 0.35);
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="brand">
+      <div class="logo">B2</div>
+      <div>
+        <h1>经销商登录</h1>
+      </div>
+    </div>
+    <p class="subtitle">使用手机号获取验证码登录 PC 商城。若开启开发环境，验证码会在接口响应中的 <code>debugCode</code> 字段返回。</p>
+
+    <form id="form" novalidate>
+      <div class="field">
+        <label for="phone">手机号</label>
+        <input
+          id="phone"
+          name="phone"
+          type="tel"
+          inputmode="numeric"
+          maxlength="11"
+          placeholder="请输入 11 位手机号"
+          autocomplete="tel"
+          required
+        />
+      </div>
+      <div class="field">
+        <label for="code">短信验证码</label>
+        <div class="row">
+          <input
+            id="code"
+            name="code"
+            type="text"
+            inputmode="numeric"
+            maxlength="8"
+            placeholder="6 位验证码"
+            autocomplete="one-time-code"
+          />
+          <button type="button" class="btn-send" id="btnSend">获取验证码</button>
+        </div>
+      </div>
+      <button type="submit" class="btn-primary" id="btnLogin">登录</button>
+    </form>
+
+    <div class="msg" id="msg" aria-live="polite"></div>
+
+    <div class="footer">
+      登录成功后，令牌保存在本页会话（<code>sessionStorage</code>）。访问地址：<code>/mall/</code> 与接口同源时可免配置跨域。
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var API = ""; // 与当前站点同源；若静态页单独部署，改为 "http://localhost:8080"
+
+      var phoneEl = document.getElementById("phone");
+      var codeEl = document.getElementById("code");
+      var btnSend = document.getElementById("btnSend");
+      var btnLogin = document.getElementById("btnLogin");
+      var msgEl = document.getElementById("msg");
+      var form = document.getElementById("form");
+
+      var countdownTimer = null;
+      var countdownSec = 0;
+
+      function setMsg(text, type) {
+        msgEl.textContent = text || "";
+        msgEl.className = "msg" + (type ? " " + type : "");
+      }
+
+      function startCountdown(sec) {
+        countdownSec = sec;
+        btnSend.disabled = true;
+        function tick() {
+          btnSend.textContent = countdownSec > 0 ? countdownSec + "s" : "获取验证码";
+          if (countdownSec <= 0) {
+            clearInterval(countdownTimer);
+            countdownTimer = null;
+            btnSend.disabled = false;
+            return;
+          }
+          countdownSec--;
+        }
+        tick();
+        countdownTimer = setInterval(tick, 1000);
+      }
+
+      async function parseJson(res) {
+        var text = await res.text();
+        if (!text) return null;
+        try {
+          return JSON.parse(text);
+        } catch (e) {
+          return { _raw: text };
+        }
+      }
+
+      btnSend.addEventListener("click", async function () {
+        var phone = (phoneEl.value || "").replace(/\s/g, "");
+        if (!/^1[3-9]\d{9}$/.test(phone)) {
+          setMsg("请输入正确的 11 位中国大陆手机号。", "error");
+          return;
+        }
+        setMsg("正在发送…", "hint");
+        btnSend.disabled = true;
+        try {
+          var res = await fetch(API + "/api/mall/auth/sms/send", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ phone: phone }),
+          });
+          var data = await parseJson(res);
+          if (!res.ok) {
+            var err = (data && (data.message || data.error)) || res.statusText;
+            setMsg(err || "发送失败", "error");
+            btnSend.disabled = false;
+            return;
+          }
+          var hint = data.message || "验证码已发送";
+          if (data.debugCode) {
+            hint += "（开发环境验证码：" + data.debugCode + "）";
+          }
+          setMsg(hint, "ok");
+          startCountdown(60);
+        } catch (e) {
+          setMsg("网络异常，请确认后端已启动且地址可访问。", "error");
+          btnSend.disabled = false;
+        }
+      });
+
+      form.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        var phone = (phoneEl.value || "").replace(/\s/g, "");
+        var code = (codeEl.value || "").trim();
+        if (!/^1[3-9]\d{9}$/.test(phone)) {
+          setMsg("请输入正确的手机号。", "error");
+          return;
+        }
+        if (!code) {
+          setMsg("请输入验证码。", "error");
+          return;
+        }
+        setMsg("登录中…", "hint");
+        btnLogin.disabled = true;
+        try {
+          var res = await fetch(API + "/api/mall/auth/sms/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ phone: phone, code: code }),
+          });
+          var data = await parseJson(res);
+          if (!res.ok) {
+            var err = (data && data.message) || "登录失败";
+            setMsg(err, "error");
+            btnLogin.disabled = false;
+            return;
+          }
+          if (data.accessToken) {
+            sessionStorage.setItem("mall_access_token", data.accessToken);
+            sessionStorage.setItem("mall_member_id", String(data.memberId || ""));
+            sessionStorage.setItem("mall_phone", data.phone || phone);
+          }
+          setMsg("登录成功。memberId: " + (data.memberId || "") + "，令牌已写入 sessionStorage。", "ok");
+        } catch (err) {
+          setMsg("网络异常。", "error");
+        }
+        btnLogin.disabled = false;
+      });
+    })();
+  </script>
+</body>
+</html>

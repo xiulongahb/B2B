@@ -1,0 +1,9 @@
+# 开发环境：短信走日志模拟，并在发码接口返回验证码便于联调（切勿用于生产）
+b2b:
+  mall:
+    sms:
+      dev-expose-code-in-response: true
+
+logging:
+  level:
+    com.b2b: DEBUG
