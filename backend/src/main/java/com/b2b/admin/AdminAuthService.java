@@ -39,6 +39,9 @@ public class AdminAuthService {
         if (!passwordEncoder.matches(password, u.getPasswordHash())) {
             throw new ApiException(HttpStatus.UNAUTHORIZED, "用户名或密码错误");
         }
+        if (!u.isEnabled()) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "账号已停用");
+        }
         String token = jwtService.createAdminToken(u.getId(), u.getUsername());
         return new LoginResult(token, "Bearer", jwtProperties.getExpirationMs(), u.getId(), u.getUsername());
     }

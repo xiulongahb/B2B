@@ -21,7 +21,7 @@
     <button id="login">登录</button>
   </div>
   <div id="panel" style="display:none;">
-    <p><button id="dash">刷新看板</button> <button id="pend">待审商品</button> <button id="sup">供应商列表</button></p>
+    <p><button id="dash">刷新看板</button> <button id="users">后台用户</button> <button id="pend">待审商品</button> <button id="sup">供应商列表</button></p>
     <pre id="out"></pre>
   </div>
   <script>
@@ -50,6 +50,7 @@
         .catch(function () { document.getElementById("out").textContent = "请求失败"; });
     }
     document.getElementById("dash").onclick = function () { load("/api/admin/dashboard"); };
+    document.getElementById("users").onclick = function () { load("/api/admin/users"); };
     document.getElementById("pend").onclick = function () { load("/api/admin/products/pending"); };
     document.getElementById("sup").onclick = function () { load("/api/admin/suppliers"); };
     if (tok()) {

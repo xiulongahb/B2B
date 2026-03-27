@@ -5,9 +5,11 @@ import com.b2b.domain.Category;
 import com.b2b.domain.OrderEntity;
 import com.b2b.domain.Product;
 import com.b2b.domain.Supplier;
+import com.b2b.security.AdminPrincipal;
 import java.util.List;
 import java.util.Map;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,9 +24,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdminApiController {
 
     private final AdminMvpService adminMvpService;
+    private final AdminUserManageService adminUserManageService;
 
-    public AdminApiController(AdminMvpService adminMvpService) {
+    public AdminApiController(AdminMvpService adminMvpService, AdminUserManageService adminUserManageService) {
         this.adminMvpService = adminMvpService;
+        this.adminUserManageService = adminUserManageService;
     }
 
     @GetMapping("/categories")
@@ -109,6 +113,36 @@ public class AdminApiController {
         return adminMvpService.dashboard();
     }
 
+    @GetMapping("/users")
+    public List<AdminUserResponse> listAdminUsers() {
+        return adminUserManageService.listUsers();
+    }
+
+    @PostMapping("/users")
+    public AdminUserResponse createAdminUser(@RequestBody AdminUserCreateBody body) {
+        return adminUserManageService.createUser(body.getUsername(), body.getPassword());
+    }
+
+    @PutMapping("/users/{id}/password")
+    public AdminUserResponse resetAdminPassword(@PathVariable Long id, @RequestBody AdminPasswordBody body) {
+        return adminUserManageService.resetPassword(id, body.getNewPassword());
+    }
+
+    @PutMapping("/users/{id}/enabled")
+    public AdminUserResponse setAdminEnabled(
+            @AuthenticationPrincipal AdminPrincipal principal,
+            @PathVariable Long id,
+            @RequestBody AdminEnabledBody body) {
+        return adminUserManageService.setEnabled(principal.getAdminId(), id, body.isEnabled());
+    }
+
+    @DeleteMapping("/users/{id}")
+    public ResponseEntity<Void> deleteAdminUser(
+            @AuthenticationPrincipal AdminPrincipal principal, @PathVariable Long id) {
+        adminUserManageService.deleteUser(principal.getAdminId(), id);
+        return ResponseEntity.noContent().build();
+    }
+
     public static class CategoryBody {
         private String name;
         private Integer sortOrder;
@@ -139,6 +173,51 @@ public class AdminApiController {
 
         public void setName(String name) {
             this.name = name;
+        }
+    }
+
+    public static class AdminUserCreateBody {
+        private String username;
+        private String password;
+
+        public String getUsername() {
+            return username;
+        }
+
+        public void setUsername(String username) {
+            this.username = username;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+
+        public void setPassword(String password) {
+            this.password = password;
+        }
+    }
+
+    public static class AdminPasswordBody {
+        private String newPassword;
+
+        public String getNewPassword() {
+            return newPassword;
+        }
+
+        public void setNewPassword(String newPassword) {
+            this.newPassword = newPassword;
+        }
+    }
+
+    public static class AdminEnabledBody {
+        private boolean enabled;
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
         }
     }
 }

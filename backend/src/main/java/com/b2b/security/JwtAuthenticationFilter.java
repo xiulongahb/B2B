@@ -1,5 +1,7 @@
 package com.b2b.security;
 
+import com.b2b.domain.AdminUser;
+import com.b2b.domain.AdminUserRepository;
 import java.io.IOException;
 import java.util.Optional;
 import javax.servlet.FilterChain;
@@ -17,9 +19,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
+    private final AdminUserRepository adminUserRepository;
 
-    public JwtAuthenticationFilter(JwtService jwtService) {
+    public JwtAuthenticationFilter(JwtService jwtService, AdminUserRepository adminUserRepository) {
         this.jwtService = jwtService;
+        this.adminUserRepository = adminUserRepository;
     }
 
     @Override
@@ -53,6 +57,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 a.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 return a;
             case ADMIN:
+                Optional<AdminUser> adminRow = adminUserRepository.findById(p.getId());
+                if (adminRow.isEmpty() || !adminRow.get().isEnabled()) {
+                    return null;
+                }
                 AdminPrincipal ap = new AdminPrincipal(p.getId(), p.getUsername());
                 UsernamePasswordAuthenticationToken a2 =
                         new UsernamePasswordAuthenticationToken(

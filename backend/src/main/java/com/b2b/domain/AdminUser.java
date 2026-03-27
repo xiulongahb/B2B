@@ -23,6 +23,9 @@ public class AdminUser {
     private String passwordHash;
 
     @Column(nullable = false)
+    private boolean enabled = true;
+
+    @Column(nullable = false)
     private Instant createdAt = Instant.now();
 
     protected AdminUser() {}
@@ -46,5 +49,17 @@ public class AdminUser {
 
     public Instant getCreatedAt() {
         return createdAt;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
     }
 }
