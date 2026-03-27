@@ -26,7 +26,6 @@
       margin: 0;
       min-height: 100vh;
       font-family: "DM Sans", "PingFang SC", "Microsoft YaHei", sans-serif;
-      background: var(--bg);
       color: var(--text);
       display: flex;
       align-items: center;
@@ -34,15 +33,28 @@
       padding: 24px;
       position: relative;
       overflow-x: hidden;
+      background-color: var(--bg);
+      background-image:
+        linear-gradient(
+          165deg,
+          rgba(8, 14, 28, 0.9) 0%,
+          rgba(12, 22, 42, 0.82) 38%,
+          rgba(6, 12, 24, 0.88) 100%
+        ),
+        url("/images/shan-shui-bg.svg");
+      background-size: cover, cover;
+      background-position: center, center bottom;
+      background-repeat: no-repeat, no-repeat;
+      background-attachment: fixed, fixed;
     }
     body::before {
       content: "";
       position: fixed;
       inset: -40%;
       background:
-        radial-gradient(ellipse 50% 40% at 20% 20%, rgba(61, 139, 253, 0.18), transparent 55%),
-        radial-gradient(ellipse 45% 35% at 85% 75%, rgba(52, 211, 153, 0.1), transparent 50%),
-        radial-gradient(circle at 50% 100%, rgba(37, 99, 201, 0.15), transparent 45%);
+        radial-gradient(ellipse 50% 40% at 20% 20%, rgba(61, 139, 253, 0.14), transparent 55%),
+        radial-gradient(ellipse 45% 35% at 85% 75%, rgba(52, 211, 153, 0.08), transparent 50%),
+        radial-gradient(circle at 50% 100%, rgba(37, 99, 201, 0.12), transparent 45%);
       pointer-events: none;
       z-index: 0;
     }

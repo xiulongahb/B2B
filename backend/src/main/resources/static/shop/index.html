@@ -5,17 +5,47 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>PC 商城 · 商品列表</title>
   <style>
-    body { font-family: system-ui, sans-serif; max-width: 960px; margin: 24px auto; padding: 0 16px; }
-    h1 { font-size: 1.25rem; }
+    html { min-height: 100%; }
+    body {
+      font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+      min-height: 100vh;
+      margin: 0;
+      padding: 24px 16px 48px;
+      box-sizing: border-box;
+      background-color: #f2efe8;
+      background-image:
+        linear-gradient(
+          to bottom,
+          rgba(252, 250, 245, 0.94) 0%,
+          rgba(248, 244, 236, 0.9) 42%,
+          rgba(240, 235, 226, 0.82) 100%
+        ),
+        url("/images/shan-shui-bg.svg");
+      background-size: cover, cover;
+      background-position: center top, center bottom;
+      background-repeat: no-repeat, no-repeat;
+      background-attachment: fixed, fixed;
+    }
+    .wrap { max-width: 960px; margin: 0 auto; position: relative; z-index: 1; }
+    h1 { font-size: 1.25rem; color: #2c3d4a; }
     .bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
     .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
-    .card { border: 1px solid #ddd; border-radius: 8px; padding: 12px; }
-    .price { color: #c00; font-weight: 600; }
-    a { color: #06c; }
-    code { background: #f4f4f4; padding: 2px 6px; border-radius: 4px; }
+    .card {
+      border: 1px solid rgba(44, 61, 74, 0.12);
+      border-radius: 10px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.78);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 4px 24px rgba(30, 50, 60, 0.06);
+    }
+    .price { color: #b03030; font-weight: 600; }
+    a { color: #1a5f7a; }
+    code { background: rgba(255, 255, 255, 0.7); padding: 2px 6px; border-radius: 4px; }
+    .hint { color: #5a6d7a; font-size: 14px; }
   </style>
 </head>
 <body>
+  <div class="wrap">
   <div class="bar">
     <h1>商品列表（阶段 A MVP）</h1>
     <div>
@@ -25,7 +55,7 @@
       <span id="tokenHint"></span>
     </div>
   </div>
-  <p style="color:#666;font-size:14px;">公开接口 <code>GET /api/mall/products</code>。加入购物车需先在 <a href="/mall/index.html">经销商登录</a> 获取令牌。</p>
+  <p class="hint">公开接口 <code>GET /api/mall/products</code>。加入购物车需先在 <a href="/mall/index.html">经销商登录</a> 获取令牌。</p>
   <div id="list" class="grid"></div>
   <p id="err" style="color:red;"></p>
   <script>
@@ -62,5 +92,6 @@
       })
       .catch(function () { document.getElementById("err").textContent = "加载失败，请确认后端已启动。"; });
   </script>
+  </div>
 </body>
 </html>

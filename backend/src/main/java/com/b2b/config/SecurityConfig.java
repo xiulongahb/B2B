@@ -36,7 +36,7 @@ public class SecurityConfig {
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authorizeRequests()
-                .antMatchers(HttpMethod.GET, "/mall/**", "/admin/**", "/supplier/**", "/shop/**")
+                .antMatchers(HttpMethod.GET, "/mall/**", "/admin/**", "/supplier/**", "/shop/**", "/images/**")
                 .permitAll()
                 .antMatchers(HttpMethod.GET, "/api/mall/products")
                 .permitAll()

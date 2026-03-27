@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMax slice">
+  <defs>
+    <linearGradient id="gSky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#7a9eb8"/>
+      <stop offset="45%" stop-color="#4a6d82"/>
+      <stop offset="100%" stop-color="#2c4555"/>
+    </linearGradient>
+    <linearGradient id="gMist" x1="0%" y1="60%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#c8dce8" stop-opacity="0"/>
+      <stop offset="70%" stop-color="#a8c0d0" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#8aaab8" stop-opacity="0.55"/>
+    </linearGradient>
+    <linearGradient id="gWater" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3d5a6c" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#1a2832" stop-opacity="0.85"/>
+    </linearGradient>
+  </defs>
+  <rect width="1440" height="900" fill="url(#gSky)"/>
+  <!-- Üð -->
+  <path fill="#5a7a8c" opacity="0.35" d="M0 420 L180 300 L340 360 L520 260 L700 320 L880 240 L1060 300 L1240 220 L1440 280 L1440 900 L0 900 Z"/>
+  <path fill="#4a6575" opacity="0.45" d="M0 480 L220 360 L400 420 L580 320 L760 380 L940 300 L1120 360 L1300 280 L1440 320 L1440 900 L0 900 Z"/>
+  <!-- -oqæ -->
+  <path fill="#2d4552" opacity="0.65" d="M0 520 L280 400 L460 460 L640 360 L820 430 L1000 350 L1180 400 L1360 340 L1440 380 L1440 900 L0 900 Z"/>
+  <path fill="#1e3542" opacity="0.8" d="M0 600 L160 500 L320 560 L500 460 L680 540 L860 470 L1040 520 L1220 460 L1440 500 L1440 900 L0 900 Z"/>
+  <!-- Ñ¸ / 4b -->
+  <path fill="url(#gWater)" d="M0 720 Q360 680 720 700 T1440 690 L1440 900 L0 900 Z"/>
+  <rect width="1440" height="900" fill="url(#gMist)"/>
+</svg>
