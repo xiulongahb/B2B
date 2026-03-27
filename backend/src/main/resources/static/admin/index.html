@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>运营端 · MVP</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 24px auto; padding: 0 16px; }
+    pre { background: #f6f6f6; padding: 12px; overflow: auto; font-size: 12px; }
+    label { display: block; margin: 8px 0 4px; }
+    input { width: 260px; padding: 6px; }
+    button { margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <h1>运营端（阶段 A）</h1>
+  <p>默认账号 <code>admin</code> / <code>Admin1234a</code>（由启动种子数据写入，仅演示）。</p>
+  <div id="loginBox">
+    <label>用户名 <input id="u" value="admin" /></label>
+    <label>密码 <input id="p" type="password" value="Admin1234a" /></label>
+    <button id="login">登录</button>
+  </div>
+  <div id="panel" style="display:none;">
+    <p><button id="dash">刷新看板</button> <button id="pend">待审商品</button> <button id="sup">供应商列表</button></p>
+    <pre id="out"></pre>
+  </div>
+  <script>
+    var API = "";
+    function tok() { return sessionStorage.getItem("admin_token"); }
+    function setTok(t) { sessionStorage.setItem("admin_token", t); }
+    document.getElementById("login").onclick = function () {
+      fetch(API + "/api/admin/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: document.getElementById("u").value, password: document.getElementById("p").value })
+      }).then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (!d.accessToken) throw new Error(d.message || "失败");
+          setTok(d.accessToken);
+          document.getElementById("loginBox").style.display = "none";
+          document.getElementById("panel").style.display = "block";
+          load("/api/admin/dashboard");
+        })
+        .catch(function (e) { alert(e.message || "登录失败"); });
+    };
+    function load(path) {
+      fetch(API + path, { headers: { Authorization: "Bearer " + tok() } })
+        .then(function (r) { return r.json(); })
+        .then(function (d) { document.getElementById("out").textContent = JSON.stringify(d, null, 2); })
+        .catch(function () { document.getElementById("out").textContent = "请求失败"; });
+    }
+    document.getElementById("dash").onclick = function () { load("/api/admin/dashboard"); };
+    document.getElementById("pend").onclick = function () { load("/api/admin/products/pending"); };
+    document.getElementById("sup").onclick = function () { load("/api/admin/suppliers"); };
+    if (tok()) {
+      document.getElementById("loginBox").style.display = "none";
+      document.getElementById("panel").style.display = "block";
+      load("/api/admin/dashboard");
+    }
+  </script>
+</body>
+</html>

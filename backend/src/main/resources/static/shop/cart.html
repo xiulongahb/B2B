@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>购物车</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 720px; margin: 24px auto; padding: 0 16px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #ddd; padding: 8px; font-size: 14px; }
+    button { margin-top: 12px; }
+    .muted { color: #666; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <h1>购物车</h1>
+  <p class="muted"><a href="/shop/index.html">返回商品</a> · <a href="/mall/index.html">登录</a></p>
+  <div id="main"></div>
+  <script>
+    var API = "";
+    function token() { return sessionStorage.getItem("mall_access_token"); }
+    if (!token()) {
+      document.getElementById("main").innerHTML = "<p>未登录，请先 <a href=\"/mall/index.html\">登录</a></p>";
+    } else {
+      fetch(API + "/api/mall/cart", { headers: { Authorization: "Bearer " + token() } })
+        .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
+        .then(function (lines) {
+          if (!lines.length) {
+            document.getElementById("main").innerHTML = "<p>购物车为空</p>";
+            return;
+          }
+          var rows = lines.map(function (l) {
+            return "<tr><td>" + l.productName + "</td><td>" + l.quantity + "</td><td>¥" + l.unitPrice + "</td><td>¥" + l.subtotal + "</td></tr>";
+          }).join("");
+          document.getElementById("main").innerHTML =
+            "<table><thead><tr><th>商品</th><th>数量</th><th>单价</th><th>小计</th></tr></thead><tbody>" +
+            rows + "</tbody></table>" +
+            "<p><label>收货人 <input id=\"rn\" /></label></p>" +
+            "<p><label>手机 <input id=\"rp\" /></label></p>" +
+            "<p><label>地址 <input id=\"ad\" style=\"width:100%\" /></label></p>" +
+            "<button id=\"go\">提交订单</button>";
+          document.getElementById("go").onclick = function () {
+            var body = {
+              receiverName: document.getElementById("rn").value,
+              receiverPhone: document.getElementById("rp").value,
+              addressLine: document.getElementById("ad").value
+            };
+            fetch(API + "/api/mall/orders", {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: "Bearer " + token() },
+              body: JSON.stringify(body)
+            }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+              .then(function (o) {
+                if (!o.ok) throw new Error(o.j.message || "下单失败");
+                var oid = o.j.id;
+                return fetch(API + "/api/mall/orders/" + oid + "/pay", {
+                  method: "POST",
+                  headers: { Authorization: "Bearer " + token() }
+                }).then(function () { return oid; });
+              })
+              .then(function (oid) {
+                alert("订单已创建并模拟支付成功，订单号见控制台");
+                location.href = "/shop/orders.html";
+              })
+              .catch(function (e) { alert(e.message || "失败"); });
+          };
+        })
+        .catch(function () {
+          document.getElementById("main").innerHTML = "<p>加载失败或令牌失效，请重新登录。</p>";
+        });
+    }
+  </script>
+</body>
+</html>

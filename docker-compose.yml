@@ -1,0 +1,19 @@
+# 本地 MySQL：docker compose up -d
+# JDBC：jdbc:mysql://localhost:3306/b2b_mall 用户 root / 密码见 MYSQL_ROOT_PASSWORD
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: b2b-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: b2b_mall
+      TZ: Asia/Shanghai
+    ports:
+      - "3306:3306"
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - b2b_mysql_data:/var/lib/mysql
+
+volumes:
+  b2b_mysql_data:

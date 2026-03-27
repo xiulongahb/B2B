@@ -25,35 +25,42 @@ class MallAuthIntegrationTest {
     @Autowired private ObjectMapper objectMapper;
 
     @Test
-    void sendLoginCode_thenLogin_thenMe() throws Exception {
-        String phone = "13800138000";
+    void register_passwordLogin_thenMe() throws Exception {
+        String phone = "13800138001";
+        String username = "testuser01";
+        String password = "Test1234a";
 
-        MvcResult send =
-                mockMvc.perform(
-                                post("/api/mall/auth/sms/send")
-                                        .contentType(MediaType.APPLICATION_JSON)
-                                        .content("{\"phone\":\"" + phone + "\"}"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.message").exists())
-                        .andExpect(jsonPath("$.debugCode").exists())
-                        .andReturn();
+        String code = sendSmsAndGetCode(phone);
 
-        JsonNode sendJson = objectMapper.readTree(send.getResponse().getContentAsString());
-        String code = sendJson.get("debugCode").asText();
+        mockMvc.perform(
+                        post("/api/mall/auth/register")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"username\":\""
+                                                + username
+                                                + "\",\"password\":\""
+                                                + password
+                                                + "\",\"phone\":\""
+                                                + phone
+                                                + "\",\"smsCode\":\""
+                                                + code
+                                                + "\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value(username))
+                .andExpect(jsonPath("$.phone").value(phone));
 
         MvcResult login =
                 mockMvc.perform(
-                                post("/api/mall/auth/sms/login")
+                                post("/api/mall/auth/password/login")
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(
-                                                "{\"phone\":\""
-                                                        + phone
-                                                        + "\",\"code\":\""
-                                                        + code
+                                                "{\"username\":\""
+                                                        + username
+                                                        + "\",\"password\":\""
+                                                        + password
                                                         + "\"}"))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.accessToken").exists())
-                        .andExpect(jsonPath("$.memberId").exists())
                         .andReturn();
 
         String token =
@@ -67,11 +74,94 @@ class MallAuthIntegrationTest {
                                 .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.memberId").exists())
+                .andExpect(jsonPath("$.username").value(username))
                 .andExpect(jsonPath("$.phone").value(phone));
+    }
+
+    @Test
+    void register_thenSmsLogin() throws Exception {
+        String phone = "13800138002";
+        String username = "testuser02";
+        String password = "Test1234b";
+
+        String code1 = sendSmsAndGetCode(phone);
+        mockMvc.perform(
+                        post("/api/mall/auth/register")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"username\":\""
+                                                + username
+                                                + "\",\"password\":\""
+                                                + password
+                                                + "\",\"phone\":\""
+                                                + phone
+                                                + "\",\"smsCode\":\""
+                                                + code1
+                                                + "\"}"))
+                .andExpect(status().isOk());
+
+        String code2 = sendSmsAndGetCode(phone);
+
+        MvcResult login =
+                mockMvc.perform(
+                                post("/api/mall/auth/sms/login")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(
+                                                "{\"phone\":\""
+                                                        + phone
+                                                        + "\",\"code\":\""
+                                                        + code2
+                                                        + "\"}"))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.username").value(username))
+                        .andReturn();
+
+        String token =
+                objectMapper
+                        .readTree(login.getResponse().getContentAsString())
+                        .get("accessToken")
+                        .asText();
+
+        mockMvc.perform(
+                        get("/api/mall/auth/me")
+                                .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value(username));
+    }
+
+    @Test
+    void smsLogin_withoutRegister_returns401() throws Exception {
+        String phone = "13800138999";
+        String code = sendSmsAndGetCode(phone);
+
+        mockMvc.perform(
+                        post("/api/mall/auth/sms/login")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"phone\":\""
+                                                + phone
+                                                + "\",\"code\":\""
+                                                + code
+                                                + "\"}"))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
     void me_withoutToken_returns401() throws Exception {
         mockMvc.perform(get("/api/mall/auth/me")).andExpect(status().isUnauthorized());
+    }
+
+    private String sendSmsAndGetCode(String phone) throws Exception {
+        MvcResult send =
+                mockMvc.perform(
+                                post("/api/mall/auth/sms/send")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content("{\"phone\":\"" + phone + "\"}"))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.debugCode").exists())
+                        .andReturn();
+
+        JsonNode sendJson = objectMapper.readTree(send.getResponse().getContentAsString());
+        return sendJson.get("debugCode").asText();
     }
 }

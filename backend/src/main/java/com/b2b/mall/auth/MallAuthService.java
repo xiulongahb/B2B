@@ -11,6 +11,7 @@ import com.b2b.mall.member.MemberType;
 import com.b2b.security.JwtService;
 import java.security.SecureRandom;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +26,7 @@ public class MallAuthService {
     private final MemberRepository memberRepository;
     private final JwtService jwtService;
     private final B2bJwtProperties jwtProperties;
+    private final PasswordEncoder passwordEncoder;
 
     public MallAuthService(
             B2bMallSmsProperties smsProps,
@@ -32,13 +34,15 @@ public class MallAuthService {
             SmsGateway smsGateway,
             MemberRepository memberRepository,
             JwtService jwtService,
-            B2bJwtProperties jwtProperties) {
+            B2bJwtProperties jwtProperties,
+            PasswordEncoder passwordEncoder) {
         this.smsProps = smsProps;
         this.smsCodeStore = smsCodeStore;
         this.smsGateway = smsGateway;
         this.memberRepository = memberRepository;
         this.jwtService = jwtService;
         this.jwtProperties = jwtProperties;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public SendSmsResult sendLoginCode(String rawPhone) {
@@ -61,6 +65,66 @@ public class MallAuthService {
     }
 
     @Transactional
+    public LoginResult register(String rawUsername, String rawPassword, String rawPhone, String rawSmsCode) {
+        String username = rawUsername == null ? null : rawUsername.trim();
+        String password = rawPassword;
+        String phone = PhoneNumber.normalize(rawPhone);
+        String smsCode = rawSmsCode == null ? "" : rawSmsCode.trim();
+
+        if (!AuthValidators.isValidUsername(username)) {
+            throw new ApiException(
+                    HttpStatus.BAD_REQUEST, "用户名须为 4-32 位字母、数字或下划线");
+        }
+        if (!AuthValidators.isValidPassword(password)) {
+            throw new ApiException(
+                    HttpStatus.BAD_REQUEST,
+                    "密码须 8-64 位且包含大小写字母与数字");
+        }
+        if (!PhoneNumber.isValidCnMobile(phone)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "手机号格式不正确");
+        }
+        if (smsCode.isEmpty()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "请输入验证码");
+        }
+        if (!smsCodeStore.verifyAndConsume(phone, smsCode)) {
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "验证码错误或已过期");
+        }
+        if (memberRepository.existsByUsername(username)) {
+            throw new ApiException(HttpStatus.CONFLICT, "用户名已被使用");
+        }
+        if (memberRepository.existsByPhone(phone)) {
+            throw new ApiException(HttpStatus.CONFLICT, "该手机号已注册");
+        }
+        String hash = passwordEncoder.encode(password);
+        Member member =
+                memberRepository.save(
+                        new Member(username, hash, phone, MemberType.RETAIL));
+        return buildLoginResult(member);
+    }
+
+    @Transactional
+    public LoginResult loginByPassword(String rawUsername, String rawPassword) {
+        String username = rawUsername == null ? "" : rawUsername.trim();
+        String password = rawPassword == null ? "" : rawPassword;
+        if (username.isEmpty() || password.isEmpty()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "请输入用户名和密码");
+        }
+        Member member =
+                memberRepository
+                        .findByUsername(username)
+                        .orElseThrow(
+                                () ->
+                                        new ApiException(
+                                                HttpStatus.UNAUTHORIZED, "用户名或密码错误"));
+        if (member.getPasswordHash() == null
+                || !passwordEncoder.matches(password, member.getPasswordHash())) {
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "用户名或密码错误");
+        }
+        member.touch();
+        return buildLoginResult(member);
+    }
+
+    @Transactional
     public LoginResult loginBySms(String rawPhone, String rawCode) {
         String phone = PhoneNumber.normalize(rawPhone);
         if (!PhoneNumber.isValidCnMobile(phone)) {
@@ -76,14 +140,24 @@ public class MallAuthService {
         Member member =
                 memberRepository
                         .findByPhone(phone)
-                        .orElseGet(() -> memberRepository.save(new Member(phone, MemberType.RETAIL)));
+                        .orElseThrow(
+                                () ->
+                                        new ApiException(
+                                                HttpStatus.UNAUTHORIZED, "该手机号尚未注册，请先注册"));
         member.touch();
-        String token = jwtService.createMallMemberToken(member.getId(), member.getPhone());
+        return buildLoginResult(member);
+    }
+
+    private LoginResult buildLoginResult(Member member) {
+        String token =
+                jwtService.createMallMemberToken(
+                        member.getId(), member.getPhone(), member.getUsername());
         return new LoginResult(
                 token,
                 "Bearer",
                 jwtProperties.getExpirationMs(),
                 member.getId(),
+                member.getUsername(),
                 member.getPhone(),
                 member.getMemberType().name());
     }
@@ -113,6 +187,7 @@ public class MallAuthService {
         private final String tokenType;
         private final long expiresInMs;
         private final Long memberId;
+        private final String username;
         private final String phone;
         private final String memberType;
 
@@ -121,12 +196,14 @@ public class MallAuthService {
                 String tokenType,
                 long expiresInMs,
                 Long memberId,
+                String username,
                 String phone,
                 String memberType) {
             this.accessToken = accessToken;
             this.tokenType = tokenType;
             this.expiresInMs = expiresInMs;
             this.memberId = memberId;
+            this.username = username;
             this.phone = phone;
             this.memberType = memberType;
         }
@@ -145,6 +222,10 @@ public class MallAuthService {
 
         public Long getMemberId() {
             return memberId;
+        }
+
+        public String getUsername() {
+            return username;
         }
 
         public String getPhone() {

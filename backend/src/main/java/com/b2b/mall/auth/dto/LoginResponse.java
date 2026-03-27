@@ -5,6 +5,8 @@ public class LoginResponse {
     private String tokenType;
     private long expiresInMs;
     private Long memberId;
+    /** 注册用户名 */
+    private String username;
     private String phone;
     private String memberType;
 
@@ -15,12 +17,14 @@ public class LoginResponse {
             String tokenType,
             long expiresInMs,
             Long memberId,
+            String username,
             String phone,
             String memberType) {
         this.accessToken = accessToken;
         this.tokenType = tokenType;
         this.expiresInMs = expiresInMs;
         this.memberId = memberId;
+        this.username = username;
         this.phone = phone;
         this.memberType = memberType;
     }
@@ -39,6 +43,10 @@ public class LoginResponse {
 
     public Long getMemberId() {
         return memberId;
+    }
+
+    public String getUsername() {
+        return username;
     }
 
     public String getPhone() {

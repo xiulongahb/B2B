@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>供应商端 · MVP</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 24px auto; padding: 0 16px; }
+    pre { background: #f6f6f6; padding: 12px; overflow: auto; font-size: 12px; }
+    label { display: block; margin: 6px 0 2px; font-size: 13px; }
+    input { width: 100%; max-width: 400px; padding: 6px; }
+    button { margin: 8px 8px 0 0; }
+    section { margin-top: 20px; border-top: 1px solid #eee; padding-top: 12px; }
+  </style>
+</head>
+<body>
+  <h1>供应商端（阶段 A）</h1>
+  <p>演示账号（种子数据）：<code>demo_supplier</code> / <code>Demo1234a</code>（已审核）。也可自行注册后由运营审核。</p>
+  <section id="auth">
+    <h2>登录</h2>
+    <label>用户名 <input id="lu" value="demo_supplier" /></label>
+    <label>密码 <input id="lp" type="password" value="Demo1234a" /></label>
+    <button id="btnLogin">登录</button>
+    <h2>注册</h2>
+    <label>用户名 <input id="ru" /></label>
+    <label>密码 <input id="rp" type="password" placeholder="含大小写与数字" /></label>
+    <label>企业名称 <input id="rc" /></label>
+    <button id="btnReg">注册</button>
+  </section>
+  <section id="panel" style="display:none;">
+    <button id="myP">我的商品</button>
+    <button id="myO">我的订单</button>
+    <label style="display:inline-block;margin-left:8px;">订单ID <input id="oid" type="number" style="width:120px;" placeholder="已支付待发货" /></label>
+    <button id="ship">发货</button>
+    <h3>发布商品（需类目/品牌 ID，可用运营端或数据库查看，演示默认多为 1）</h3>
+    <label>类目ID <input id="cid" value="1" /></label>
+    <label>品牌ID <input id="bid" value="1" /></label>
+    <label>名称 <input id="pn" /></label>
+    <label>价格 <input id="pp" type="number" step="0.01" /></label>
+    <label>库存 <input id="ps" type="number" /></label>
+    <button id="pub">提交审核</button>
+    <pre id="out"></pre>
+  </section>
+  <script>
+    var API = "";
+    function tok() { return sessionStorage.getItem("supplier_token"); }
+    function setTok(t) { sessionStorage.setItem("supplier_token", t); }
+    function showPanel() {
+      document.getElementById("panel").style.display = "block";
+    }
+    document.getElementById("btnLogin").onclick = function () {
+      fetch(API + "/api/supplier/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: document.getElementById("lu").value, password: document.getElementById("lp").value })
+      }).then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (!d.accessToken) throw new Error(d.message || "失败");
+          setTok(d.accessToken);
+          showPanel();
+          load("/api/supplier/products");
+        })
+        .catch(function (e) { alert(e.message || "登录失败"); });
+    };
+    document.getElementById("btnReg").onclick = function () {
+      fetch(API + "/api/supplier/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: document.getElementById("ru").value,
+          password: document.getElementById("rp").value,
+          companyName: document.getElementById("rc").value
+        })
+      }).then(function (r) { return r.json(); })
+        .then(function (d) { alert(d.message || "已提交"); })
+        .catch(function () { alert("失败"); });
+    };
+    function load(path, opt) {
+      fetch(API + path, Object.assign({ headers: { Authorization: "Bearer " + tok() } }, opt || {}))
+        .then(function (r) { return r.json(); })
+        .then(function (d) { document.getElementById("out").textContent = JSON.stringify(d, null, 2); })
+        .catch(function () { document.getElementById("out").textContent = "请求失败"; });
+    }
+    document.getElementById("myP").onclick = function () { load("/api/supplier/products"); };
+    document.getElementById("myO").onclick = function () { load("/api/supplier/orders"); };
+    document.getElementById("ship").onclick = function () {
+      var id = document.getElementById("oid").value;
+      if (!id) { alert("填写订单ID"); return; }
+      load("/api/supplier/orders/" + encodeURIComponent(id) + "/ship", { method: "POST" });
+    };
+    document.getElementById("pub").onclick = function () {
+      load("/api/supplier/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + tok() },
+        body: JSON.stringify({
+          categoryId: Number(document.getElementById("cid").value),
+          brandId: Number(document.getElementById("bid").value) || null,
+          name: document.getElementById("pn").value,
+          price: Number(document.getElementById("pp").value),
+          stock: Number(document.getElementById("ps").value) || 0,
+          description: "MVP"
+        })
+      });
+    };
+    if (tok()) { showPanel(); load("/api/supplier/products"); }
+  </script>
+</body>
+</html>

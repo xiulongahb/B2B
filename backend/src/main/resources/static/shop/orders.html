@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>我的订单</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 24px auto; padding: 0 16px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { border: 1px solid #ddd; padding: 8px; }
+    a { color: #06c; }
+  </style>
+</head>
+<body>
+  <h1>我的订单</h1>
+  <p><a href="/shop/index.html">商品</a> · <a href="/shop/cart.html">购物车</a></p>
+  <div id="main"></div>
+  <script>
+    var API = "";
+    function token() { return sessionStorage.getItem("mall_access_token"); }
+    if (!token()) {
+      document.getElementById("main").innerHTML = "<p>请先 <a href=\"/mall/index.html\">登录</a></p>";
+    } else {
+      fetch(API + "/api/mall/orders", { headers: { Authorization: "Bearer " + token() } })
+        .then(function (r) { return r.json(); })
+        .then(function (orders) {
+          if (!orders.length) {
+            document.getElementById("main").innerHTML = "<p>暂无订单</p>";
+            return;
+          }
+          var rows = orders.map(function (o) {
+            return "<tr><td>" + o.orderNo + "</td><td>" + o.status + "</td><td>" + o.totalAmount + "</td>" +
+              "<td><button data-id=\"" + o.id + "\" data-st=\"" + o.status + "\">确认收货</button></td></tr>";
+          }).join("");
+          document.getElementById("main").innerHTML = "<table><thead><tr><th>订单号</th><th>状态</th><th>金额</th><th>操作</th></tr></thead><tbody>" +
+            rows + "</tbody></table>";
+          document.getElementById("main").onclick = function (e) {
+            if (e.target.tagName !== "BUTTON") return;
+            var id = e.target.getAttribute("data-id");
+            var st = e.target.getAttribute("data-st");
+            if (st !== "SHIPPED") { alert("仅已发货订单可确认"); return; }
+            fetch(API + "/api/mall/orders/" + id + "/confirm", {
+              method: "POST",
+              headers: { Authorization: "Bearer " + token() }
+            }).then(function (r) {
+              if (!r.ok) return r.json().then(function (j) { throw new Error(j.message); });
+              alert("已确认收货");
+              location.reload();
+            }).catch(function (err) { alert(err.message || "失败"); });
+          };
+        });
+    }
+  </script>
+</body>
+</html>

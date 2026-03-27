@@ -6,35 +6,27 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-public class MallMemberPrincipal implements UserDetails {
+public class SupplierPrincipal implements UserDetails {
 
-    private final Long memberId;
-    private final String phone;
-    /** 注册时的登录名，可能为 null（历史数据） */
+    private final Long supplierId;
     private final String loginName;
 
-    public MallMemberPrincipal(Long memberId, String phone, String loginName) {
-        this.memberId = memberId;
-        this.phone = phone;
+    public SupplierPrincipal(Long supplierId, String loginName) {
+        this.supplierId = supplierId;
         this.loginName = loginName;
     }
 
-    public Long getMemberId() {
-        return memberId;
+    public Long getSupplierId() {
+        return supplierId;
     }
 
-    public String getPhone() {
-        return phone;
-    }
-
-    /** 展示用登录名（用户名），与 UserDetails#getUsername 不同 */
     public String getLoginName() {
         return loginName;
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_MALL_MEMBER"));
+        return List.of(new SimpleGrantedAuthority("ROLE_SUPPLIER"));
     }
 
     @Override
@@ -42,10 +34,9 @@ public class MallMemberPrincipal implements UserDetails {
         return "";
     }
 
-    /** 供 Spring Security 使用的唯一标识，使用 memberId */
     @Override
     public String getUsername() {
-        return String.valueOf(memberId);
+        return String.valueOf(supplierId);
     }
 
     @Override

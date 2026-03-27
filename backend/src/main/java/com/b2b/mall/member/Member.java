@@ -18,6 +18,14 @@ public class Member {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /** 登录名，注册后唯一 */
+    @Column(unique = true, length = 64)
+    private String username;
+
+    /** BCrypt 哈希，仅用户名密码登录使用 */
+    @Column(name = "password_hash", length = 80)
+    private String passwordHash;
+
     @Column(nullable = false, unique = true, length = 20)
     private String phone;
 
@@ -33,7 +41,15 @@ public class Member {
 
     protected Member() {}
 
+    /** 兼容旧数据：仅手机号 */
     public Member(String phone, MemberType memberType) {
+        this.phone = phone;
+        this.memberType = memberType;
+    }
+
+    public Member(String username, String passwordHash, String phone, MemberType memberType) {
+        this.username = username;
+        this.passwordHash = passwordHash;
         this.phone = phone;
         this.memberType = memberType;
     }
@@ -42,8 +58,28 @@ public class Member {
         return id;
     }
 
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
+    }
+
     public String getPhone() {
         return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 
     public MemberType getMemberType() {

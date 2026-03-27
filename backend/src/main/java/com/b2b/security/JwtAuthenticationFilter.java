@@ -29,18 +29,45 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String header = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (header != null && header.startsWith("Bearer ")) {
             String token = header.substring(7).trim();
-            Optional<JwtService.MallTokenPayload> payload = jwtService.parseMallMemberToken(token);
-            if (payload.isPresent()) {
-                JwtService.MallTokenPayload p = payload.get();
-                MallMemberPrincipal principal =
-                        new MallMemberPrincipal(p.getMemberId(), p.getPhone());
-                UsernamePasswordAuthenticationToken auth =
-                        new UsernamePasswordAuthenticationToken(
-                                principal, null, principal.getAuthorities());
-                auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(auth);
+            Optional<JwtService.UnifiedPayload> parsed = jwtService.parseToken(token);
+            if (parsed.isPresent()) {
+                JwtService.UnifiedPayload p = parsed.get();
+                UsernamePasswordAuthenticationToken auth = buildAuth(request, p);
+                if (auth != null) {
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+                }
             }
         }
         filterChain.doFilter(request, response);
+    }
+
+    private static UsernamePasswordAuthenticationToken buildAuth(
+            HttpServletRequest request, JwtService.UnifiedPayload p) {
+        switch (p.getKind()) {
+            case MALL_MEMBER:
+                MallMemberPrincipal mp =
+                        new MallMemberPrincipal(p.getId(), p.getPhone(), p.getUsername());
+                UsernamePasswordAuthenticationToken a =
+                        new UsernamePasswordAuthenticationToken(
+                                mp, null, mp.getAuthorities());
+                a.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                return a;
+            case ADMIN:
+                AdminPrincipal ap = new AdminPrincipal(p.getId(), p.getUsername());
+                UsernamePasswordAuthenticationToken a2 =
+                        new UsernamePasswordAuthenticationToken(
+                                ap, null, ap.getAuthorities());
+                a2.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                return a2;
+            case SUPPLIER:
+                SupplierPrincipal sp = new SupplierPrincipal(p.getId(), p.getUsername());
+                UsernamePasswordAuthenticationToken a3 =
+                        new UsernamePasswordAuthenticationToken(
+                                sp, null, sp.getAuthorities());
+                a3.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                return a3;
+            default:
+                return null;
+        }
     }
 }
